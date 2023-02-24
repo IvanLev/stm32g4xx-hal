@@ -21,7 +21,6 @@ compile_error!(
         stm32g484"
 );
 
-extern crate bare_metal;
 extern crate void;
 
 pub extern crate cortex_m;

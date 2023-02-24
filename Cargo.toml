@@ -31,10 +31,6 @@ features = ["fdcan_g0_g4_l5"]
 version = "0.2.7"
 default-features = false
 
-[dependencies.bare-metal]
-features = ["const-fn"]
-version = "0.2.5"
-
 [dependencies.embedded-hal]
 features = ["unproven"]
 version = "0.2.4"
