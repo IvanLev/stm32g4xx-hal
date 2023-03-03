@@ -312,6 +312,59 @@ pub mod config {
         }
     }
 
+    /// DualMode config for the ADC
+    #[derive(Debug, Clone, Copy)]
+    pub enum DualMode {
+        /// Independent mode
+        Independent,
+        /// Combined regular simultaneous + injected simultaneous mode
+        Dual_Reg_Sim_Inj_Sim,
+        /// Combined regular simultaneous + alternate trigger mode
+        Dual_Reg_Sim_Alt_Trig,
+        /// Combined Interleaved mode + injected simultaneous mode
+        Dual_Reg_Int_Inj_Sim,
+        /// Injected simultaneous mode only
+        Dual_Inj_Sim,
+        ///  Regular simultaneous mode only
+        Dual_Reg_Sim,
+        /// Interleaved mode only
+        Dual_Int,
+        /// Alternate trigger mode only
+        Dual_Alt_Trig,
+    }
+
+    impl From<DualMode> for u8 {
+        fn from(c: DualMode) -> u8 {
+            match c {
+                DualMode::Independent => 0b00000,
+                DualMode::Dual_Reg_Sim_Inj_Sim => 0b00001,
+                DualMode::Dual_Reg_Sim_Alt_Trig => 0b00010,
+                DualMode::Dual_Reg_Int_Inj_Sim => 0b00011,
+                // Reserved => 0b00100;
+                DualMode::Dual_Inj_Sim => 0b00101,
+                DualMode::Dual_Reg_Sim => 0b00110,
+                DualMode::Dual_Int => 0b00111,
+                DualMode::Dual_Alt_Trig => 0b01001,
+            }
+        }
+    }
+
+    impl From<u8> for DualMode {
+        fn from(b: u8) -> DualMode {
+            match b {
+                0b00000 => DualMode::Independent,
+                0b00001 => DualMode::Dual_Reg_Sim_Inj_Sim,
+                0b00010 => DualMode::Dual_Reg_Sim_Alt_Trig,
+                0b00011 => DualMode::Dual_Reg_Int_Inj_Sim,
+                0b00101 => DualMode::Dual_Inj_Sim,
+                0b00110 => DualMode::Dual_Reg_Sim,
+                0b00111 => DualMode::Dual_Int,
+                0b01001 => DualMode::Dual_Alt_Trig,
+                _ => unimplemented!(),
+            }
+        }
+    }
+
     /// Resolution to sample at
     #[derive(Debug, Clone, Copy)]
     pub enum Resolution {
@@ -615,6 +668,7 @@ pub mod config {
     pub struct AdcConfig {
         pub(crate) clock_mode: ClockMode,
         pub(crate) clock: Clock,
+        pub(crate) dual_mode: DualMode,
         pub(crate) resolution: Resolution,
         pub(crate) align: Align,
         pub(crate) external_trigger: (TriggerMode, ExternalTrigger),
@@ -640,6 +694,12 @@ pub mod config {
         #[inline(always)]
         pub fn clock(mut self, clock: Clock) -> Self {
             self.clock = clock;
+            self
+        }
+        /// change the dual_mode field
+        #[inline(always)]
+        pub fn dual_mode(mut self, dual_mode: DualMode) -> Self {
+            self.dual_mode = dual_mode;
             self
         }
         /// change the resolution field
@@ -719,6 +779,7 @@ pub mod config {
             Self {
                 clock_mode: ClockMode::Synchronous_Div_1,
                 clock: Clock::Div_2,
+                dual_mode: DualMode::Independent,
                 resolution: Resolution::Twelve,
                 align: Align::Right,
                 external_trigger: (TriggerMode::Disabled, ExternalTrigger::Tim_1_cc_1),
@@ -1323,6 +1384,16 @@ macro_rules! adc {
                     }
                 }
 
+                /// Sets the dual mode for the adc
+                #[inline(always)]
+                pub fn set_dual_mode(&mut self, dual_mode: config::DualMode) {
+                    self.config.dual_mode = dual_mode;
+                    unsafe {
+                        let common = &(*stm32::$common_type::ptr());
+                        common.ccr.modify(|_, w| w.dual().bits(dual_mode.into()));
+                    }
+                }
+
                 /// Sets the sampling resolution
                 #[inline(always)]
                 pub fn set_resolution(&mut self, resolution: config::Resolution) {
@@ -1882,6 +1953,12 @@ macro_rules! adc {
                 #[inline(always)]
                 pub fn set_clock(&mut self, clock: config::Clock) {
                     self.adc.set_clock(clock)
+                }
+
+                /// Sets the dual mode for the adc
+                #[inline(always)]
+                pub fn set_dual_mode(&mut self, dual_mode: config::DualMode) {
+                    self.adc.set_dual_mode(dual_mode)
                 }
 
                 /// Sets the sampling resolution
