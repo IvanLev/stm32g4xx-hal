@@ -216,6 +216,19 @@ use crate::gpio::AF14;
 use crate::gpio::{gpioa::*, gpiob::*, gpioc::*, gpiod::*, gpioe::*, gpiof::*};
 use crate::gpio::{Alternate, AF1, AF10, AF11, AF12, AF2, AF3, AF4, AF5, AF6, AF9};
 
+/// A filler type for when Channel 1 pin is unnecessary
+pub struct NoCh1;
+/// A filler type for when Channel 2 pin is unnecessary
+pub struct NoCh2;
+/// A filler type for when Channel 3 pin is unnecessary
+pub struct NoCh3;
+/// A filler type for when Channel 4 pin is unnecessary
+pub struct NoCh4;
+/// A filler type for when Channel 5 pin is unnecessary
+pub struct NoCh5;
+/// A filler type for when Channel 6 pin is unnecessary
+pub struct NoCh6;
+
 // This trait marks that a GPIO pin can be used with a specific timer channel
 // TIM is the timer being used
 // CHANNEL is a marker struct for the channel (or multi channels for tuples)
@@ -244,6 +257,10 @@ pub struct C2;
 pub struct C3;
 /// Marker struct for PWM channel 4 on Pins trait and Pwm struct
 pub struct C4;
+/// Marker struct for PWM channel 5 on Pins trait and Pwm struct
+pub struct C5;
+/// Marker struct for PWM channel 6 on Pins trait and Pwm struct
+pub struct C6;
 
 /// Marker struct for pins and PWM channels that do not support complementary output
 pub struct ComplementaryImpossible;
@@ -404,6 +421,75 @@ macro_rules! pins_tuples {
                 type Channel = (Pwm<TIM, $CHA, TA, ActiveHigh, ActiveHigh>, Pwm<TIM, $CHB, TB, ActiveHigh, ActiveHigh>, Pwm<TIM, $CHC, TC, ActiveHigh, ActiveHigh>, Pwm<TIM, $CHD, TD, ActiveHigh, ActiveHigh>);
             }
         )*
+    };
+    // Tuple of five pins (permutates the last 3)
+    ($(($CHD:ty, $CHE:ty, $CHA:ty, $CHB:ty, $CHC:ty)),*) => {
+        $(
+            pins_tuples! {
+                PERM4: ($CHD, $CHE, $CHA, $CHB, $CHC),
+                PERM4: ($CHD, $CHE, $CHA, $CHC, $CHB),
+                PERM4: ($CHD, $CHE, $CHB, $CHA, $CHC),
+                PERM4: ($CHD, $CHE, $CHB, $CHC, $CHA),
+                PERM4: ($CHD, $CHE, $CHC, $CHA, $CHB),
+                PERM4: ($CHD, $CHE, $CHC, $CHB, $CHA)
+            }
+        )*
+    };
+    // Tuple of five pins (permutates the last 3)
+    ($(PERM4: ($CHA:ty, $CHB:ty, $CHC:ty, $CHD:ty, $CHE:ty)),*) => {
+        $(
+            impl<TIM, CHA, CHB, CHC, CHD, CHE, TA, TB, TC, TD, TE> Pins<TIM, ($CHA, $CHB, $CHC, $CHD, $CHE), (TA, TB, TC, TD, TE)> for (CHA, CHB, CHC, CHD, CHE)
+            where
+                CHA: Pins<TIM, $CHA, TA>,
+                CHB: Pins<TIM, $CHB, TB>,
+                CHC: Pins<TIM, $CHC, TC>,
+                CHD: Pins<TIM, $CHD, TD>,
+                CHE: Pins<TIM, $CHD, TD>,
+            {
+                type Channel = (
+                    Pwm<TIM, $CHA, TA, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHB, TB, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHC, TC, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHD, TD, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHE, TD, ActiveHigh, ActiveHigh>);
+            }
+        )*
+    };
+    // Tuple of six pins (permutates the last 3)
+    ($(($CHD:ty, $CHE:ty, $CHF:ty, $CHA:ty, $CHB:ty, $CHC:ty)),*) => {
+        $(
+            pins_tuples! {
+                PERM4: ($CHD, $CHE, $CHF, $CHA, $CHB, $CHC),
+                PERM4: ($CHD, $CHE, $CHF, $CHA, $CHC, $CHB),
+                PERM4: ($CHD, $CHE, $CHF, $CHB, $CHA, $CHC),
+                PERM4: ($CHD, $CHE, $CHF, $CHB, $CHC, $CHA),
+                PERM4: ($CHD, $CHE, $CHF, $CHC, $CHA, $CHB),
+                PERM4: ($CHD, $CHE, $CHF, $CHC, $CHB, $CHA)
+            }
+        )*
+    };
+    // Tuple of six pins (permutates the last 3)
+    ($(PERM4: ($CHA:ty, $CHB:ty, $CHC:ty, $CHD:ty, $CHE:ty, $CHF:ty)),*) => {
+        $(
+            impl<TIM, CHA, CHB, CHC, CHD, CHE, CHF, TA, TB, TC, TD, TE, TF> Pins<TIM, ($CHA, $CHB, $CHC, $CHD, $CHE, $CHF), (TA, TB, TC, TD, TE, TF)> for (CHA, CHB, CHC, CHD, CHE, CHF)
+            where
+                CHA: Pins<TIM, $CHA, TA>,
+                CHB: Pins<TIM, $CHB, TB>,
+                CHC: Pins<TIM, $CHC, TC>,
+                CHD: Pins<TIM, $CHD, TD>,
+                CHE: Pins<TIM, $CHD, TD>,
+                CHF: Pins<TIM, $CHD, TD>,
+            {
+                type Channel = (
+                    Pwm<TIM, $CHA, TA, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHB, TB, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHC, TC, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHD, TD, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHE, TD, ActiveHigh, ActiveHigh>, 
+                    Pwm<TIM, $CHF, TD, ActiveHigh, ActiveHigh>
+                );
+            }
+        )*
     }
 }
 
@@ -414,12 +500,30 @@ pins_tuples! {
     (C3, C1),
     (C1, C4),
     (C4, C1),
+    (C1, C5),
+    (C5, C1),
+    (C1, C6),
+    (C6, C1),
     (C2, C3),
     (C3, C2),
     (C2, C4),
     (C4, C2),
+    (C2, C5),
+    (C5, C2),
+    (C2, C6),
+    (C6, C2),
     (C3, C4),
-    (C4, C3)
+    (C4, C3),
+    (C3, C5),
+    (C5, C3),
+    (C3, C6),
+    (C6, C3),
+    (C4, C5),
+    (C5, C4),
+    (C4, C6),
+    (C6, C4),
+    (C5, C6),
+    (C6, C5)
 }
 
 pins_tuples! {
@@ -434,6 +538,20 @@ pins_tuples! {
     (C2, C1, C3, C4),
     (C3, C1, C2, C4),
     (C4, C1, C2, C3)
+}
+
+pins_tuples! {
+    (C1, C2, C3, C4, C5),
+    (C2, C1, C3, C4, C5),
+    (C3, C1, C2, C4, C5),
+    (C4, C5, C1, C2, C3)
+}
+
+pins_tuples! {
+    (C1, C2, C3, C4, C5, C6),
+    (C2, C1, C3, C4, C5, C6),
+    (C3, C1, C2, C4, C5, C6),
+    (C4, C5, C6, C1, C2, C3)
 }
 
 // Pin definitions, mark which pins can be used with which timers and channels
