@@ -321,6 +321,11 @@ pub trait FaultMonitor {
     fn set_fault(&mut self);
 }
 
+pub trait PwmInterrupt {
+    fn listen(&mut self);
+    fn unlisten(&mut self);
+}
+
 /// Exposes timer wide advanced features, such as [FaultMonitor](trait.FaultMonitor.html)
 /// or future features like trigger outputs for synchronization with ADCs and other peripherals
 pub struct PwmControl<TIM, FAULT> {
@@ -1445,6 +1450,21 @@ macro_rules! tim_hal {
                     }
                 }
             )*
+
+            impl<T> PwmInterrupt for PwmControl<$TIMX, T> {
+                fn listen(&mut self) {
+                    let tim = unsafe { &*$TIMX::ptr() };
+
+                    tim.dier.modify(|_, w| w.uie().set_bit());
+                }
+
+                fn unlisten(&mut self) {
+                    let tim = unsafe { &*$TIMX::ptr() };
+
+                    tim.dier.modify(|_, w| w.uie().clear_bit());
+                }
+            }
+
         )+
     }
 }
