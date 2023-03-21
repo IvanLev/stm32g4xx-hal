@@ -217,17 +217,17 @@ use crate::gpio::{gpioa::*, gpiob::*, gpioc::*, gpiod::*, gpioe::*, gpiof::*};
 use crate::gpio::{Alternate, AF1, AF10, AF11, AF12, AF2, AF3, AF4, AF5, AF6, AF9};
 
 /// A filler type for when Channel 1 pin is unnecessary
-pub struct NoCh1;
+pub struct NoCh1Pin;
 /// A filler type for when Channel 2 pin is unnecessary
-pub struct NoCh2;
+pub struct NoCh2Pin;
 /// A filler type for when Channel 3 pin is unnecessary
-pub struct NoCh3;
+pub struct NoCh3Pin;
 /// A filler type for when Channel 4 pin is unnecessary
-pub struct NoCh4;
+pub struct NoCh4Pin;
 /// A filler type for when Channel 5 pin is unnecessary
-pub struct NoCh5;
+pub struct NoCh5Pin;
 /// A filler type for when Channel 6 pin is unnecessary
-pub struct NoCh6;
+pub struct NoCh6Pin;
 
 // This trait marks that a GPIO pin can be used with a specific timer channel
 // TIM is the timer being used
