@@ -84,3 +84,5 @@ pub mod syscfg;
 pub mod time;
 pub mod timer;
 // pub mod watchdog;
+#[cfg(feature = "stm32-usbd")]
+pub mod usb;
